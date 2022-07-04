@@ -1,56 +1,97 @@
-import styled from "@emotion/styled"
+import { useState, useEffect } from 'react'
+import styled from '@emotion/styled'
+import Formulario  from './components/Formulario'
+import Resultado from './components/Resultado'
+import Spinner from './components/Spinner'
+import ImagenCripto from './img/imagen-criptos.png'
 
-const Result = styled.div`
-  color: white;
-  font-size: 'Lato', sans-serif;
 
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 30px ;
+const Contenedor = styled.div`
+  max-width: 900px;
+  margin: 0 auto;
+  width:90%;
+  @media (min-width: 992px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    colum-gap: 2rem;
+  }
 `
 const Imagen = styled.img`
+  max-width: 400px;
+  width: 80%;
+  margin: 100px auto 0 auto;
   display: block;
-  width: 120px;
-
 `
 
+const Heading = styled.h1`
+  font-family: 'Lato', sans-serif;
+  color: #fff;
+  text-align: center;
+  font-weight: 700;
+  margin-top: 80px;
+  margin-bottom: 50px;
+  font-size: 34px;
 
-const Texto = styled.p`
-  font-size: 18px;
-  span { 
-    font-weight: 700;
+  &::after { 
+    content: '';
+    width: 100px;
+    height: 6px;
+    background-color: #66a2fe;
+    display: block;
+    margin: 10px auto 0 auto; 
   }
-  
-`
-const Precio = styled.p`
-  font-size: 24px;
-  span { 
-    font-weight: 700;
-  }
-`
+  `
 
- const Resultado = ({resultado}) => { 
-  const  { PRICE, HIGHDAY, LOWDAY, 
-    CHANGEPCT24HOURS, IMAGEURL, LASTUPDATE } = resultado
-  
+function App() {
+ 
+  const [ monedas, setMonedas ] = useState({})
+  const [ resultado, setResultado ] = useState({})
+  const [cargando, setCargando ] = useState([false])
+ 
+
+  useEffect(() => {
+    if(Object.keys(monedas).length > 0 ) { 
+    const { moneda, criptomoneda } = monedas
+    const cotizarCripto = async () => {
+      setCargando(true)
+      setResultado({})
+    const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${criptomoneda}&tsyms=${moneda}`
+    
+    const respuesta = await fetch(url)
+    const resultado = await respuesta.json()
+
+
+
+      setResultado(resultado.DISPLAY[criptomoneda][moneda])
+      setCargando(false)
+    }
+   
+
+      cotizarCripto();
+
+    }
+
+  }, [monedas] )
+
+
   return (
-   <Result> 
+    <Contenedor>
       <Imagen
-        src={`https://cryptocompare.com/${IMAGEURL}`}
-        alt="imagen cripto"
+        src={ImagenCripto}
+        alt="imagenes criptomonedas"
       />
-    <div> 
-      <Precio>El precio es de: <span> {PRICE} </span></Precio>
-      <Texto>El precio mas alto del dia:  <span> {HIGHDAY} </span></Texto>
-      <Texto>El precio mas bajo del dia: <span> {LOWDAY} </span></Texto>
-      <Texto>Variacion ultimas 24hs: <span> {CHANGEPCT24HOURS} </span></Texto>
-      <Precio>Ultima actualizacion: <span> {LASTUPDATE} </span></Precio>
+      <div> 
+        <Heading>  Cotiza Criptomonedas al instante </Heading>
+        <Formulario
+          setMonedas={setMonedas}
+        />
+    { cargando && <Spinner/>}
+    {resultado.PRICE && <Resultado resultado={resultado}/>}
+    
+    
     </div>
-
-
-  </Result> 
+    </Contenedor>
   )
 }
- 
-export default Resultado
+
+export default App
